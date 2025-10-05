@@ -8,7 +8,7 @@ data = pd.read_csv("data/housing.csv")
 
 ## Quick look at the data
 
-# print(data.head()) #
+# print(data.head()) # prints column headings + first few lines of code
 # print(data.columns) # prints names of columns
 # print(data['ocean_proximity']) # returns list of values under col "ocean proximity"
 
@@ -33,12 +33,9 @@ enc.fit(data[['ocean_proximity']])
 
 
 encoded_data = enc.transform(data[['ocean_proximity']])
-
 category_names = enc.get_feature_names_out()
-
 encoded_data_df = pd.DataFrame(encoded_data, columns=category_names)
 data = pd.concat([data, encoded_data_df], axis=1)
-
 data = data.drop(columns = 'ocean_proximity')
 
 data.to_csv("revised_data.csv")

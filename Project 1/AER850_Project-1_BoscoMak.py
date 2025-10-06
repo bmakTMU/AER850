@@ -29,9 +29,11 @@ plt.scatter(data['Step'], data['X'])
 plt.scatter(data['Step'], data['Y'])
 plt.scatter(data['Step'], data['Z'])
 
+plt.title('Coordinate Value at Step')
 plt.xlabel("Step No.")
 plt.ylabel("Coordinate Value")
-plt.legend(loc='best')
+plt.legend(data,loc='best')
+plt.show()
 
 """ 2.3 Correlation Analysis """
 import seaborn as sns
@@ -79,13 +81,14 @@ from sklearn.preprocessing import StandardScaler
 # btwn step and x. therefore choose x as dep variable and drop other,
 # weaker correlations of Y and Z
 
-x_train = strat_data_train.drop(columns=['Step', 'Y', 'Z'])
+x_train = strat_data_train.drop(columns=['Step'])
 y_train = strat_data_train['Step']
-x_test = strat_data_test.drop(columns=['Step', 'Y', 'Z'])
+x_test = strat_data_test.drop(columns=['Step'])
 y_test = strat_data_test['Step']
 
 
 """ Data Scaling """
+print("Data Scaling\n")
 
 sc = StandardScaler() # define function
 sc.fit(x_train) # gets std dev and mean
@@ -96,56 +99,56 @@ pd.DataFrame(x_train).to_csv("scaled_training_data.csv") # saves copy
 
 x_test = sc.transform(x_test) # standardizes dataset
 
+# No longer using Linear Regression Model -  commented out
 
-""" Model 1 - Linear Regression Model """
-from sklearn.linear_model import LinearRegression
-print("-----------------")
+# """ Model 1 - Linear Regression Model """
+# from sklearn.linear_model import LinearRegression
+# print("-----------------")
 
 
-#Model
-model1 = LinearRegression()
-model1.fit(x_train, y_train)
+# #Model
+# model1 = LinearRegression()
+# model1.fit(x_train, y_train)
 
-#Prediction
-y_pred_train1 = model1.predict(x_train)
-for i in range(5):
-    print("Model 1 Predictions:", y_pred_train1[i], 'Actual Value:',y_train[i])
+# #Prediction
+# y_pred_train1 = model1.predict(x_train)
+# for i in range(5):
+#     print("Model 1 Predictions:", y_pred_train1[i], 'Actual Value:',y_train[i])
     
-#Evaluation
-from sklearn.metrics import mean_absolute_error
-mae_train1 = mean_absolute_error(y_pred_train1, y_train)
-print("Model 1 training MAE = ", round(mae_train1,2))
+# #Evaluation
+# from sklearn.metrics import mean_absolute_error
+# mae_train1 = mean_absolute_error(y_pred_train1, y_train)
+# print("Model 1 training MAE = ", round(mae_train1,2))
 
-#k-fold cross validation
-from sklearn.model_selection import cross_val_score
-cv_scores_model1 = cross_val_score(model1, x_train, y_train, cv=5, scoring='neg_mean_absolute_error')
-cv_mae1 = -cv_scores_model1.mean()
-print("Model 1 MAE (CV):", round(cv_mae1, 2))
+# #k-fold cross validation
+# from sklearn.model_selection import cross_val_score
+# cv_scores_model1 = cross_val_score(model1, x_train, y_train, cv=5, scoring='neg_mean_absolute_error')
+# cv_mae1 = -cv_scores_model1.mean()
+# print("Model 1 MAE (CV):", round(cv_mae1, 2))
     
-#Pipeline
-from sklearn.pipeline import Pipeline
-pipeline1 = Pipeline([
-    ('scaler', StandardScaler()),
-    ('model', LinearRegression())])
-cv_scores1 = cross_val_score(pipeline1,
-                             x_train,
-                             y_train,
-                             cv=5,
-                             scoring='neg_mean_absolute_error')
-cv_mae1 = -cv_scores1.mean()
-print("Model 1 Pipeline CV MAE:", round(cv_mae1, 2))
+# #Pipeline
+# from sklearn.pipeline import Pipeline
+# pipeline1 = Pipeline([
+#     ('scaler', StandardScaler()),
+#     ('model', LinearRegression())])
+# cv_scores1 = cross_val_score(pipeline1,
+#                              x_train,
+#                              y_train,
+#                              cv=5,
+#                              scoring='neg_mean_absolute_error')
+# cv_mae1 = -cv_scores1.mean()
+# print("Model 1 Pipeline CV MAE:", round(cv_mae1, 2))
 
-pipeline1.fit(x_train, y_train)
-y_pred_test1 = pipeline1.predict(x_test)
-mae_test1 = mean_absolute_error(y_test, y_pred_test1)
-print("Model 1 Pipeline Test MAE:", round(mae_test1, 2))
-
-
-
+# pipeline1.fit(x_train, y_train)
+# y_pred_test1 = pipeline1.predict(x_test)
+# mae_test1 = mean_absolute_error(y_test, y_pred_test1)
+# print("Model 1 Pipeline Test MAE:", round(mae_test1, 2))
     
-""" Model 2 - Logistic Regression Model """
+print("Model Development\n\n")
+""" Model 1 - Logistic Regression Model """
+
 from sklearn.linear_model import LogisticRegression
-print("-----------------")
+print("Model 1 - Logistic Regression\n-----------------")
 
 
 #Model
@@ -155,18 +158,21 @@ model2.fit(x_train, y_train)
 #Prediction
 y_pred_train2 = model2.predict(x_train)
 for i in range(5):
-    print("Model 2 Predictions:", y_pred_train2[i], 'Actual Value:',y_train[i])
+    print("Model 1 Predictions:", y_pred_train2[i], 'Actual Value:',y_train[i])
     
 #Evaluation
+from sklearn.metrics import mean_absolute_error
 mae_train2 = mean_absolute_error(y_pred_train2, y_train)
-print("Model 2 training MAE = ", round(mae_train2,2))
+print("Model 1 training MAE = ", round(mae_train2,2))
 
 #k-fold cross validation
+from sklearn.model_selection import cross_val_score
 cv_scores_model2 = cross_val_score(model2, x_train, y_train, cv=5, scoring='neg_mean_absolute_error')
 cv_mae2 = -cv_scores_model2.mean()
-print("Model 2 MAE (CV):", round(cv_mae2, 2))
+print("Model 1 MAE (CV):", round(cv_mae2, 2))
 
 #Pipeline
+from sklearn.pipeline import Pipeline
 pipeline2 = Pipeline([
     ('scaler', StandardScaler()),
     ('model', LogisticRegression())])
@@ -176,12 +182,12 @@ cv_scores2 = cross_val_score(pipeline2,
                              cv=5,
                              scoring='neg_mean_absolute_error')
 cv_mae2 = -cv_scores2.mean()
-print("Model 2 Pipeline CV MAE:", round(cv_mae1, 2))
+print("Model 1 Pipeline CV MAE:", round(cv_mae2, 2))
 
 pipeline2.fit(x_train, y_train)
 y_pred_test2 = pipeline2.predict(x_test)
 mae_test2 = mean_absolute_error(y_test, y_pred_test2)
-print("Model 2 Pipeline Test MAE:", round(mae_test2, 2))
+print("Model 1 Pipeline Test MAE:", round(mae_test2, 2))
 
 #Grid Search
 print("Grid Search")
@@ -212,10 +218,9 @@ y_pred = grid.predict(x_test)
 print("Test MAE:", mean_absolute_error(y_test, y_pred))
 
 
-""" Model 3 Random Forest Model """
+""" Model 2 Random Forest Model """
 from sklearn.ensemble import RandomForestRegressor
-print("-----------------")
-
+print("\nModel 2 - Random Forest\n-----------------")
 
 #Model
 model3 = RandomForestRegressor()
@@ -224,16 +229,16 @@ model3.fit(x_train, y_train)
 #Prediction
 y_pred_train3 = model3.predict(x_train)
 for i in range(5):
-    print("Model 3 Predictions:", y_pred_train3[i], 'Actual Value:',y_train[i])
+    print("Model 2 Predictions:", y_pred_train3[i], 'Actual Value:',y_train[i])
     
 #Evaluation
 mae_train3 = mean_absolute_error(y_pred_train3, y_train)
-print("Model 3 training MAE = ", round(mae_train3,2))
+print("Model 2 training MAE = ", round(mae_train3,2))
  
 #k-fold cross validation
 cv_scores_model3 = cross_val_score(model3, x_train, y_train, cv=5, scoring='neg_mean_absolute_error')
 cv_mae3 = -cv_scores_model3.mean()
-print("Model 3 Mean Absolute Error (CV):", round(cv_mae3, 2))
+print("Model 2 Mean Absolute Error (CV):", round(cv_mae3, 2))
 
 #Pipeline
 pipeline3 = Pipeline([
@@ -245,12 +250,12 @@ cv_scores3 = cross_val_score(pipeline3,
                              cv=5,
                              scoring='neg_mean_absolute_error')
 cv_mae3 = -cv_scores3.mean()
-print("Model 3 Pipeline CV MAE:", round(cv_mae3, 2))
+print("Model 2 Pipeline CV MAE:", round(cv_mae3, 2))
 
 pipeline3.fit(x_train, y_train)
 y_pred_test3 = pipeline3.predict(x_test)
 mae_test3 = mean_absolute_error(y_test, y_pred_test3)
-print("Model 3 Pipeline Test MAE:", round(mae_test3, 2))
+print("Model 2 Pipeline Test MAE:", round(mae_test3, 2))
 
 #Grid Search
 print("Grid Search")
@@ -281,10 +286,9 @@ y_pred = grid.predict(x_test)
 print("Test MAE:", mean_absolute_error(y_test, y_pred))
 
 
-
-""" Model 4 - SVM Model """
+""" Model 3 - SVM Model """
 from sklearn import svm
-print("-----------------")
+print("\nModel 3 - SVM\n-----------------")
 
 #Model
 model4 = svm.SVC()
@@ -293,16 +297,16 @@ model4.fit(x_train, y_train)
 #Prediction
 y_pred_train4 = model4.predict(x_train)
 for i in range(5):
-    print("Model 4 Predictions:", y_pred_train4[i], 'Actual Value:',y_train[i])
+    print("Model 3 Predictions:", y_pred_train4[i], 'Actual Value:',y_train[i])
     
 #Evaluation
 mae_train4 = mean_absolute_error(y_pred_train4, y_train)
-print("Model 4 training MAE = ", round(mae_train4,2))
+print("Model 3 training MAE = ", round(mae_train4,2))
  
 #k-fold cross validation
 cv_scores_model4 = cross_val_score(model4, x_train, y_train, cv=5, scoring='neg_mean_absolute_error')
 cv_mae4 = -cv_scores_model4.mean()
-print("Model 4 Mean Absolute Error (CV):", round(cv_mae4, 2))
+print("Model 3 Mean Absolute Error (CV):", round(cv_mae4, 2))
 
 #Pipeline
 pipeline4 = Pipeline([
@@ -314,13 +318,12 @@ cv_scores4 = cross_val_score(pipeline4,
                              cv=5,
                              scoring='neg_mean_absolute_error')
 cv_mae4 = -cv_scores4.mean()
-print("Model 4 Pipeline CV MAE:", round(cv_mae4, 2))
+print("Model 3 Pipeline CV MAE:", round(cv_mae4, 2))
 
 pipeline4.fit(x_train, y_train)
 y_pred_test4 = pipeline4.predict(x_test)
 mae_test4 = mean_absolute_error(y_test, y_pred_test4)
-print("Model 4 Pipeline Test MAE:", round(mae_test4, 2))
-
+print("Model 3 Pipeline Test MAE:", round(mae_test4, 2))
 
 #Grid Search
 print("Grid Search")
@@ -377,9 +380,13 @@ print("Best params:", rand.best_params_)
 y_pred = rand.predict(x_test)
 print("Test MAE:", mean_absolute_error(y_test, y_pred))
 
-""" 2.5 Model Evaluation """
+""" 2.5 Model Performance Analysis """
+print("\nModel Performance Analysis\n----------------")
+
+#Logistic Regression Analysis
 from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_score
 
+print("LogisticRegression Metrics")
 clf1 = Pipeline([
     ("scaler", StandardScaler()),
     ("clf", LogisticRegression(max_iter=1000, random_state=21))
@@ -393,11 +400,107 @@ y_pred_clf1 = clf1.predict(x_test)
 cm_clf1 = confusion_matrix(y_test, y_pred_clf1)
 print("Confusion Matrix:")
 print(cm_clf1)
-precision_clf1 = precision_score(y_test, y_pred_clf1)
-recall_clf1 = recall_score(y_test, y_pred_clf1)
-f1_clf1 = f1_score(y_test, y_pred_clf1)
+precision_clf1 = precision_score(y_true = y_test,
+                                 y_pred = y_pred_clf1,
+                                 average='weighted')
+recall_clf1 = recall_score(y_test, y_pred_clf1, average='weighted')
+f1_clf1 = f1_score(y_test, y_pred_clf1, average='weighted')
 print("Precision:", precision_clf1)
 print("Recall:", recall_clf1)
 print("F1 Score:", f1_clf1)
 
 
+#RandomForestRegressor Analysis
+print("\nRandomForest")
+from sklearn.ensemble import RandomForestClassifier
+clf2 = RandomForestClassifier(n_estimators=200, random_state = 21)
+clf2.fit(x_train, y_train)
+print("RF Training accuracy:", clf2.score(x_train, y_train))
+print("RF Test accuracy:", clf2.score(x_test, y_test))
+
+y_pred_clf2 = clf2.predict(x_test)
+cm_clf2 = confusion_matrix(y_test, y_pred_clf2)
+print("RF Confusion Matrix:")
+print(cm_clf2)
+precision_clf2 = precision_score(y_test, y_pred_clf2, average='weighted')
+recall_clf2 = recall_score(y_test, y_pred_clf2, average='weighted')
+f1_clf2 = f1_score(y_test, y_pred_clf2, average='weighted')
+print("RF Precision:", precision_clf2)
+print("RF Recall:", recall_clf2)
+print("RF F1 Score:", f1_clf2)
+
+#SVM Analysis
+print("\nSVM Metrics")
+clf3 = Pipeline([
+    ("scaler", StandardScaler()),
+    ("clf", svm.SVC(kernel=rand.best_params_['model__kernel'], probability = True, random_state=21))
+])
+
+clf3.fit(x_train, y_train)
+print("Training accuracy:", clf3.score(x_train, y_train))
+print("Test accuracy:", clf3.score(x_test, y_test))
+
+y_pred_clf3 = clf3.predict(x_test)
+cm_clf3 = confusion_matrix(y_test, y_pred_clf3)
+print("Confusion Matrix:")
+print(cm_clf3)
+precision_clf3 = precision_score(y_true = y_test,
+                                 y_pred = y_pred_clf3,
+                                 average='weighted')
+recall_clf3 = recall_score(y_test, y_pred_clf3, average='weighted')
+f1_clf3 = f1_score(y_test, y_pred_clf3, average='weighted')
+print("Precision:", precision_clf3)
+print("Recall:", recall_clf3)
+print("F1 Score:", f1_clf3)
+
+""" 2.6 - Stacked Model Performance"""
+print("\n\n2.6 - Stacked Model Performance\n")
+from sklearn.ensemble import StackingClassifier
+from sklearn.pipeline import make_pipeline
+from sklearn.svm import LinearSVC
+
+estimators = [
+    ('clf2', clf2),
+     ('clf3', clf3)
+]
+
+stack_clf = StackingClassifier(
+    estimators = estimators,
+    final_estimator = LogisticRegression(max_iter = 1000, random_state = 21)
+)
+
+stack_clf.fit(x_train, y_train)
+print("Stacked Classifier Training Accuracy: ",stack_clf.score(x_train,y_train))
+print("Stacked Classifier Test Accuracy: ", stack_clf.score(x_test, y_test))
+    
+y_pred_stack = stack_clf.predict(x_test)
+cm_stack_clf = confusion_matrix(y_test, y_pred_stack)
+print("Stacked Classifier Confusion Matrix:")
+print(cm_stack_clf)
+precision_stack = precision_score(y_test, y_pred_stack, average='weighted')
+recall_stack = recall_score(y_test, y_pred_stack, average='weighted')
+f1_stack = f1_score(y_test, y_pred_stack, average='weighted')
+print("Stacked Classifier Precision:", precision_stack)
+print("Stacked Classifier Recall:", recall_stack)
+print("Stacked Classifier F1 Score:", f1_stack)
+    
+""" 2.7 Model Evaluation """
+print("\n\n2.7 Model Evaluation")
+import joblib
+
+joblib.dump(stack_clf, "project1_testfile.joblib")
+
+final_clf = joblib.load("project1_testfile.joblib")
+
+a = [9.375,3.0625,1.51]
+b = [6.995,5.125,0.3875]
+c = [0,3.0625,1.93]
+d = [9.4,3,1.8]
+e = [9.4,3,1.3]
+
+eval_data = np.array([a,b,c,d,e])
+pred = final_clf.predict(eval_data)
+print(pred)
+
+
+    

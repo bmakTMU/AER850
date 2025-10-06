@@ -31,6 +31,7 @@ plt.scatter(data['Step'], data['Z'])
 
 plt.xlabel("Step No.")
 plt.ylabel("Coordinate Value")
+plt.legend(loc='best')
 
 """ 2.3 Correlation Analysis """
 import seaborn as sns
@@ -96,8 +97,10 @@ pd.DataFrame(x_train).to_csv("scaled_training_data.csv") # saves copy
 x_test = sc.transform(x_test) # standardizes dataset
 
 
-""" Linear Regression Model """
+""" Model 1 - Linear Regression Model """
 from sklearn.linear_model import LinearRegression
+print("-----------------")
+
 
 #Model
 model1 = LinearRegression()
@@ -137,9 +140,13 @@ y_pred_test1 = pipeline1.predict(x_test)
 mae_test1 = mean_absolute_error(y_test, y_pred_test1)
 print("Model 1 Pipeline Test MAE:", round(mae_test1, 2))
 
+
+
     
-""" Logistic Regression Model """
+""" Model 2 - Logistic Regression Model """
 from sklearn.linear_model import LogisticRegression
+print("-----------------")
+
 
 #Model
 model2 = LogisticRegression()
@@ -176,9 +183,39 @@ y_pred_test2 = pipeline2.predict(x_test)
 mae_test2 = mean_absolute_error(y_test, y_pred_test2)
 print("Model 2 Pipeline Test MAE:", round(mae_test2, 2))
 
+#Grid Search
+print("Grid Search")
+from sklearn.model_selection import GridSearchCV, KFold
+param_grid = {
+    'model__penalty': ['l2'],
+    'model__C': [0.01, 0.1, 1, 10],
+    'model__solver': ['lbfgs', 'liblinear'],
+    'model__max_iter': [200, 500]
+}
 
-""" Random Forest Model """
+cv = KFold(n_splits=5, shuffle=True, random_state=21)
+grid = GridSearchCV(
+    estimator=pipeline2,
+    param_grid=param_grid,
+    scoring='neg_mean_absolute_error',
+    cv=cv,
+    n_jobs=-1,
+    refit=True,           
+    verbose=1,
+    return_train_score=True
+)
+grid.fit(x_train, y_train)
+
+print("Best CV MAE:", -grid.best_score_)
+print("Best params:", grid.best_params_)
+y_pred = grid.predict(x_test)
+print("Test MAE:", mean_absolute_error(y_test, y_pred))
+
+
+""" Model 3 Random Forest Model """
 from sklearn.ensemble import RandomForestRegressor
+print("-----------------")
+
 
 #Model
 model3 = RandomForestRegressor()
@@ -215,10 +252,8 @@ y_pred_test3 = pipeline3.predict(x_test)
 mae_test3 = mean_absolute_error(y_test, y_pred_test3)
 print("Model 3 Pipeline Test MAE:", round(mae_test3, 2))
 
-
-
 #Grid Search
-
+print("Grid Search")
 from sklearn.model_selection import GridSearchCV, KFold
 param_grid = {
     'model__n_estimators': [10, 30, 50],
@@ -229,7 +264,7 @@ param_grid = {
 }
 cv = KFold(n_splits=5, shuffle=True, random_state=21)
 grid = GridSearchCV(
-    estimator=pipeline2,
+    estimator=pipeline3,
     param_grid=param_grid,
     scoring='neg_mean_absolute_error',
     cv=cv,
@@ -238,39 +273,131 @@ grid = GridSearchCV(
     verbose=1,
     return_train_score=True
 )
-grid.fit(X_train, y_train)
+grid.fit(x_train, y_train)
 
 print("Best CV MAE:", -grid.best_score_)
 print("Best params:", grid.best_params_)
-y_pred = grid.predict(X_test)
+y_pred = grid.predict(x_test)
 print("Test MAE:", mean_absolute_error(y_test, y_pred))
 
-# """ 2.5 Model Evaluation """
 
 
+""" Model 4 - SVM Model """
+from sklearn import svm
+print("-----------------")
+
+#Model
+model4 = svm.SVC()
+model4.fit(x_train, y_train)
+
+#Prediction
+y_pred_train4 = model4.predict(x_train)
+for i in range(5):
+    print("Model 4 Predictions:", y_pred_train4[i], 'Actual Value:',y_train[i])
+    
+#Evaluation
+mae_train4 = mean_absolute_error(y_pred_train4, y_train)
+print("Model 4 training MAE = ", round(mae_train4,2))
+ 
+#k-fold cross validation
+cv_scores_model4 = cross_val_score(model4, x_train, y_train, cv=5, scoring='neg_mean_absolute_error')
+cv_mae4 = -cv_scores_model4.mean()
+print("Model 4 Mean Absolute Error (CV):", round(cv_mae4, 2))
+
+#Pipeline
+pipeline4 = Pipeline([
+    ('scaler', StandardScaler()),
+    ('model', svm.SVC())])
+cv_scores4 = cross_val_score(pipeline4,
+                             x_train,
+                             y_train,
+                             cv=5,
+                             scoring='neg_mean_absolute_error')
+cv_mae4 = -cv_scores4.mean()
+print("Model 4 Pipeline CV MAE:", round(cv_mae4, 2))
+
+pipeline4.fit(x_train, y_train)
+y_pred_test4 = pipeline4.predict(x_test)
+mae_test4 = mean_absolute_error(y_test, y_pred_test4)
+print("Model 4 Pipeline Test MAE:", round(mae_test4, 2))
 
 
+#Grid Search
+print("Grid Search")
+from sklearn.model_selection import GridSearchCV, KFold
+param_grid = {
+    'model__C': [0.001, 0.01, 0.1, 1, 10, 100, 1000],
+    'model__kernel': ['rbf', 'poly', 'sigmoid', 'linear'],
+    'model__degree': [4],
+    'model__gamma': ['scale', 'auto'],
+}
+cv = KFold(n_splits=5, shuffle=True, random_state=21)
+grid = GridSearchCV(
+    estimator=pipeline4,
+    param_grid=param_grid,
+    scoring='neg_mean_absolute_error',
+    cv=cv,
+    n_jobs=-1,
+    refit=True,           
+    verbose=1,
+    return_train_score=True
+)
+grid.fit(x_train, y_train)
 
+print("Best CV MAE:", -grid.best_score_)
+print("Best params:", grid.best_params_)
+y_pred = grid.predict(x_test)
+print("Test MAE:", mean_absolute_error(y_test, y_pred))
 
+#RandomizedSearch Cross Validation
+print("RandomizedSearchCV")
+from sklearn.model_selection import RandomizedSearchCV
 
+param_distributions = {
+    'model__C': [0.001, 0.01, 0.1, 1, 10, 100, 1000],
+    'model__kernel': ['rbf', 'poly', 'sigmoid', 'linear'],
+    'model__degree': [4],
+    'model__gamma': ['scale', 'auto'],
+}
+cv = KFold(n_splits=5, shuffle=True, random_state=21)
+rand = RandomizedSearchCV(
+    estimator=pipeline4,
+    param_distributions=param_distributions,
+    scoring='neg_mean_absolute_error',
+    cv=cv,
+    n_jobs=-1,
+    refit=True,           
+    verbose=1,
+    return_train_score=True
+)
+rand.fit(x_train, y_train)
 
+print("Best CV MAE:", -rand.best_score_)
+print("Best params:", rand.best_params_)
+y_pred = rand.predict(x_test)
+print("Test MAE:", mean_absolute_error(y_test, y_pred))
 
+""" 2.5 Model Evaluation """
+from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_score
 
+clf1 = Pipeline([
+    ("scaler", StandardScaler()),
+    ("clf", LogisticRegression(max_iter=1000, random_state=21))
+])
 
+clf1.fit(x_train, y_train)
+print("Training accuracy:", clf1.score(x_train, y_train))
+print("Test accuracy:", clf1.score(x_test, y_test))
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+y_pred_clf1 = clf1.predict(x_test)
+cm_clf1 = confusion_matrix(y_test, y_pred_clf1)
+print("Confusion Matrix:")
+print(cm_clf1)
+precision_clf1 = precision_score(y_test, y_pred_clf1)
+recall_clf1 = recall_score(y_test, y_pred_clf1)
+f1_clf1 = f1_score(y_test, y_pred_clf1)
+print("Precision:", precision_clf1)
+print("Recall:", recall_clf1)
+print("F1 Score:", f1_clf1)
 
 

@@ -9,15 +9,6 @@ data = pd.read_csv("data/Project 1 Data.csv")
 data = data.dropna().reset_index(drop=True)
 
 
-## sanity check
-
-# print(data.head()) 
-# print(data.columns)
-# print(data['X'])
-# # data['X'].hist()
-# data['Step'].hist()
-
-
 """ 2.2 Data Visualization - """
 import matplotlib.pyplot as plt
 
@@ -39,19 +30,15 @@ plt.show()
 import seaborn as sns
 
 plt.figure(figsize=(10,8)) # new figure separate from historgram
-
 corr_matrix = data.corr() # create corrtrix
-
 sns.heatmap(corr_matrix, annot=True) # per corrtrix, strong -ve relationship btwn x and step
 
 
 """ 2.4 Classification Model Development/Engineering """
 
-
-""" Data splitting """
+## Data Splitting
 from sklearn.model_selection import train_test_split, StratifiedShuffleSplit
-## split data based on step value
-
+# split data based on step value
 data['coordinates'] = pd.cut(data['Step'],
                              bins = [0, 8, 9, 10, np.inf], # 4 groups - 1-7, 8, 9, 10-13
                              labels =[1, 2, 3, 4], # bin labels
@@ -62,24 +49,13 @@ splitter = StratifiedShuffleSplit(n_splits=1,
 for train_index, test_index in splitter.split(data,data['Step']): # split loop
     strat_data_train = data.loc[train_index].reset_index(drop=True) # splits training data
     strat_data_test = data.loc[test_index].reset_index(drop=True) # splits testing data
-    
 #drop extra col
 strat_data_train = strat_data_train.drop(columns=["coordinates"],axis=1)
 strat_data_test = strat_data_test.drop(columns=["coordinates"],axis=1)
 
-# ## sanity check
-
-# data.hist()
-# strat_data_train.hist()
-# strat_data_test.hist()
-
-""" Variable Selection """
+## Variable Selection
 
 from sklearn.preprocessing import StandardScaler
-# define indep (x) and dep (y) variables
-# from previous correlation matrix, strong correlation
-# btwn step and x. therefore choose x as dep variable and drop other,
-# weaker correlations of Y and Z
 
 x_train = strat_data_train.drop(columns=['Step'])
 y_train = strat_data_train['Step']
@@ -87,8 +63,7 @@ x_test = strat_data_test.drop(columns=['Step'])
 y_test = strat_data_test['Step']
 
 
-""" Data Scaling """
-print("Data Scaling\n")
+## Data Scaling
 
 sc = StandardScaler() # define function
 sc.fit(x_train) # gets std dev and mean
@@ -99,57 +74,12 @@ pd.DataFrame(x_train).to_csv("scaled_training_data.csv") # saves copy
 
 x_test = sc.transform(x_test) # standardizes dataset
 
-# No longer using Linear Regression Model -  commented out
-
-# """ Model 1 - Linear Regression Model """
-# from sklearn.linear_model import LinearRegression
-# print("-----------------")
-
-
-# #Model
-# model1 = LinearRegression()
-# model1.fit(x_train, y_train)
-
-# #Prediction
-# y_pred_train1 = model1.predict(x_train)
-# for i in range(5):
-#     print("Model 1 Predictions:", y_pred_train1[i], 'Actual Value:',y_train[i])
-    
-# #Evaluation
-# from sklearn.metrics import mean_absolute_error
-# mae_train1 = mean_absolute_error(y_pred_train1, y_train)
-# print("Model 1 training MAE = ", round(mae_train1,2))
-
-# #k-fold cross validation
-# from sklearn.model_selection import cross_val_score
-# cv_scores_model1 = cross_val_score(model1, x_train, y_train, cv=5, scoring='neg_mean_absolute_error')
-# cv_mae1 = -cv_scores_model1.mean()
-# print("Model 1 MAE (CV):", round(cv_mae1, 2))
-    
-# #Pipeline
-# from sklearn.pipeline import Pipeline
-# pipeline1 = Pipeline([
-#     ('scaler', StandardScaler()),
-#     ('model', LinearRegression())])
-# cv_scores1 = cross_val_score(pipeline1,
-#                              x_train,
-#                              y_train,
-#                              cv=5,
-#                              scoring='neg_mean_absolute_error')
-# cv_mae1 = -cv_scores1.mean()
-# print("Model 1 Pipeline CV MAE:", round(cv_mae1, 2))
-
-# pipeline1.fit(x_train, y_train)
-# y_pred_test1 = pipeline1.predict(x_test)
-# mae_test1 = mean_absolute_error(y_test, y_pred_test1)
-# print("Model 1 Pipeline Test MAE:", round(mae_test1, 2))
-    
+## Model Development    
 print("Model Development\n\n")
-""" Model 1 - Logistic Regression Model """
 
+#       Model 1 - Logistic Regression
 from sklearn.linear_model import LogisticRegression
 print("Model 1 - Logistic Regression\n-----------------")
-
 
 #Model
 model2 = LogisticRegression()
@@ -218,7 +148,7 @@ y_pred = grid.predict(x_test)
 print("Test MAE:", mean_absolute_error(y_test, y_pred))
 
 
-""" Model 2 Random Forest Model """
+#       Model 2 - Random Forest
 from sklearn.ensemble import RandomForestRegressor
 print("\nModel 2 - Random Forest\n-----------------")
 
@@ -286,7 +216,7 @@ y_pred = grid.predict(x_test)
 print("Test MAE:", mean_absolute_error(y_test, y_pred))
 
 
-""" Model 3 - SVM Model """
+#       Model 3 - SVM
 from sklearn import svm
 print("\nModel 3 - SVM\n-----------------")
 
@@ -500,7 +430,4 @@ e = [9.4,3,1.3]
 
 eval_data = np.array([a,b,c,d,e])
 pred = final_clf.predict(eval_data)
-print(pred)
-
-
-    
+print(pred)    

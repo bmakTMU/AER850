@@ -97,43 +97,153 @@ x_test = sc.transform(x_test) # standardizes dataset
 
 
 """ Linear Regression Model """
-from sklearn.linear_model import LinearRegression, LogisticRegression
+from sklearn.linear_model import LinearRegression
 
+#Model
 model1 = LinearRegression()
 model1.fit(x_train, y_train)
 
+#Prediction
 y_pred_train1 = model1.predict(x_train)
 for i in range(5):
     print("Model 1 Predictions:", y_pred_train1[i], 'Actual Value:',y_train[i])
     
+#Evaluation
+from sklearn.metrics import mean_absolute_error
+mae_train1 = mean_absolute_error(y_pred_train1, y_train)
+print("Model 1 training MAE = ", round(mae_train1,2))
+
+#k-fold cross validation
+from sklearn.model_selection import cross_val_score
+cv_scores_model1 = cross_val_score(model1, x_train, y_train, cv=5, scoring='neg_mean_absolute_error')
+cv_mae1 = -cv_scores_model1.mean()
+print("Model 1 MAE (CV):", round(cv_mae1, 2))
+    
+#Pipeline
+from sklearn.pipeline import Pipeline
+pipeline1 = Pipeline([
+    ('scaler', StandardScaler()),
+    ('model', LinearRegression())])
+cv_scores1 = cross_val_score(pipeline1,
+                             x_train,
+                             y_train,
+                             cv=5,
+                             scoring='neg_mean_absolute_error')
+cv_mae1 = -cv_scores1.mean()
+print("Model 1 Pipeline CV MAE:", round(cv_mae1, 2))
+
+pipeline1.fit(x_train, y_train)
+y_pred_test1 = pipeline1.predict(x_test)
+mae_test1 = mean_absolute_error(y_test, y_pred_test1)
+print("Model 1 Pipeline Test MAE:", round(mae_test1, 2))
+
     
 """ Logistic Regression Model """
+from sklearn.linear_model import LogisticRegression
 
+#Model
 model2 = LogisticRegression()
 model2.fit(x_train, y_train)
 
+#Prediction
 y_pred_train2 = model2.predict(x_train)
 for i in range(5):
     print("Model 2 Predictions:", y_pred_train2[i], 'Actual Value:',y_train[i])
     
+#Evaluation
+mae_train2 = mean_absolute_error(y_pred_train2, y_train)
+print("Model 2 training MAE = ", round(mae_train2,2))
+
+#k-fold cross validation
+cv_scores_model2 = cross_val_score(model2, x_train, y_train, cv=5, scoring='neg_mean_absolute_error')
+cv_mae2 = -cv_scores_model2.mean()
+print("Model 2 MAE (CV):", round(cv_mae2, 2))
+
+#Pipeline
+pipeline2 = Pipeline([
+    ('scaler', StandardScaler()),
+    ('model', LogisticRegression())])
+cv_scores2 = cross_val_score(pipeline2,
+                             x_train,
+                             y_train,
+                             cv=5,
+                             scoring='neg_mean_absolute_error')
+cv_mae2 = -cv_scores2.mean()
+print("Model 2 Pipeline CV MAE:", round(cv_mae1, 2))
+
+pipeline2.fit(x_train, y_train)
+y_pred_test2 = pipeline2.predict(x_test)
+mae_test2 = mean_absolute_error(y_test, y_pred_test2)
+print("Model 2 Pipeline Test MAE:", round(mae_test2, 2))
+
 
 """ Random Forest Model """
 from sklearn.ensemble import RandomForestRegressor
 
+#Model
 model3 = RandomForestRegressor()
 model3.fit(x_train, y_train)
 
+#Prediction
 y_pred_train3 = model3.predict(x_train)
 for i in range(5):
     print("Model 3 Predictions:", y_pred_train3[i], 'Actual Value:',y_train[i])
     
-
+#Evaluation
+mae_train3 = mean_absolute_error(y_pred_train3, y_train)
+print("Model 3 training MAE = ", round(mae_train3,2))
  
-""" Randomized Search CV """
-from sklearn.model_selection import RandomizedSearchCV
+#k-fold cross validation
+cv_scores_model3 = cross_val_score(model3, x_train, y_train, cv=5, scoring='neg_mean_absolute_error')
+cv_mae3 = -cv_scores_model3.mean()
+print("Model 3 Mean Absolute Error (CV):", round(cv_mae3, 2))
+
+#Pipeline
+pipeline3 = Pipeline([
+    ('scaler', StandardScaler()),
+    ('model', RandomForestRegressor())])
+cv_scores3 = cross_val_score(pipeline3,
+                             x_train,
+                             y_train,
+                             cv=5,
+                             scoring='neg_mean_absolute_error')
+cv_mae3 = -cv_scores3.mean()
+print("Model 3 Pipeline CV MAE:", round(cv_mae3, 2))
+
+pipeline3.fit(x_train, y_train)
+y_pred_test3 = pipeline3.predict(x_test)
+mae_test3 = mean_absolute_error(y_test, y_pred_test3)
+print("Model 3 Pipeline Test MAE:", round(mae_test3, 2))
 
 
 
+#Grid Search
+
+from sklearn.model_selection import GridSearchCV, KFold
+param_grid = {
+    'model__n_estimators': [10, 30, 50],
+    'model__max_depth': [None, 10, 20, 30],
+    'model__min_samples_split': [2, 5, 10],
+    'model__min_samples_leaf': [1, 2, 4],
+    'model__max_features': ['sqrt', 'log2'],
+}
+cv = KFold(n_splits=5, shuffle=True, random_state=21)
+grid = GridSearchCV(
+    estimator=pipeline2,
+    param_grid=param_grid,
+    scoring='neg_mean_absolute_error',
+    cv=cv,
+    n_jobs=-1,
+    refit=True,           
+    verbose=1,
+    return_train_score=True
+)
+grid.fit(X_train, y_train)
+
+print("Best CV MAE:", -grid.best_score_)
+print("Best params:", grid.best_params_)
+y_pred = grid.predict(X_test)
+print("Test MAE:", mean_absolute_error(y_test, y_pred))
 
 # """ 2.5 Model Evaluation """
 

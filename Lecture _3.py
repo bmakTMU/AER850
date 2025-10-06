@@ -50,16 +50,16 @@ from sklearn.model_selection import train_test_split, StratifiedShuffleSplit
 #                                                          random_state = 42)
 
 #the use of stratified sampling is strongly recommended
-data["income_categories"] = pd.cut(data["median_income"],
-                                   bins=[0, 2, 4, 6, np.inf],
-                                   labels=[1, 2, 3, 4])
+data["income_categories"] = pd.cut(data["median_income"], # name of col header
+                                   bins=[0, 2, 4, 6, np.inf], # bin sizes 
+                                   labels=[1, 2, 3, 4]) # bin labels
 my_splitter = StratifiedShuffleSplit(n_splits =1,
                                      test_size = 0.2, # % of data taken
                                      random_state = 42) # minecraft seed
 for train_index, test_index in my_splitter.split(data,data["income_categories"]):
     strat_data_train = data.loc[train_index].reset_index(drop=True)
     strat_data_test = data.loc[test_index].reset_index(drop=True)
-strat_data_train = strat_data_train.drop(columns=["income_categories"],axis=1)
+strat_data_train = strat_data_train.drop(columns=["income_categories"],axis=1) # axis=1 works across columns, whereas axis=0 works across rows
 strat_data_test = strat_data_test.drop(columns=["income_categories"],axis=1)
 
 
@@ -79,7 +79,7 @@ my_scaler.fit(strat_data_train.iloc[:,0:-5])
 #                   "0:-5" selects columns starting from end 
 #                   (negative indices start from end columns)
 
-scaled_data_train = my_scaler.transform(strat_data_train.iloc[:,0:-5])
+scaled_data_train = my_scaler.transform(strat_data_train.iloc[:,0:-5]) #
 scaled_data_train_df = pd.DataFrame(scaled_data_train, columns=strat_data_train.columns[:,0:-5])
 
 strat_data_train = scaled_data_train.df.join(strat_data_train.iloc[:,-5:])

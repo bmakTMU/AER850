@@ -5,7 +5,11 @@ import pandas as pd
 import numpy as np
 
 # 2.2
+
 import matplotlib.pyplot as plt
+
+# 2.4
+
 from sklearn.model_selection import train_test_split, StratifiedShuffleSplit
 from sklearn.preprocessing import StandardScaler
 
@@ -23,6 +27,15 @@ data = pd.read_csv("data/Project 1 Data.csv")
 
 
 """ 2.2 Data Visualization - """
+
+print(data.head()) 
+print(data.columns)
+data.hist(bins=13) # original bins=10, makes data look weird
+
+
+
+""" 2.4 Classification Model Development/Engineering """
+
 
 ## split data based on step value
 
@@ -49,11 +62,11 @@ strat_data_test = strat_data_test.drop(columns=["coordinates"],axis=1)
 
 """ Data Scaling """
 
-scaler = StandardScaler()
-scaler.fit(strat_data_train.iloc[:, 0:-5])
-scaled_data_train = scaler.transform(strat_data_train.iloc[:, 0:-5])
-scaled_data_train_df = pd.DataFrame(scaled_data_train, columns = strat_data_train,columns[:, 0:-5])
-strat_data_train = scaled_data_train.df
+# scaler = StandardScaler()
+# scaler.fit(strat_data_train.iloc[:, 0:-5])
+# scaled_data_train = scaler.transform(strat_data_train.iloc[:, 0:-5])
+# scaled_data_train_df = pd.DataFrame(scaled_data_train, columns = strat_data_train.columns[:, 0:-5])
+# strat_data_train = scaled_data_train.df
 
 
 

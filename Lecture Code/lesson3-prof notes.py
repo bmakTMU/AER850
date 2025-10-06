@@ -67,7 +67,7 @@ sns.heatmap(np.abs(corr_matrix))
 masked_corr_matrix = np.abs(corr_matrix) < 0.8
 sns.heatmap(masked_corr_matrix)
 
-# Drom correlation matrix, we identify colinear variables, and select one from them
+# From correlation matrix, we identify colinear variables, and select one from them
 # Usually, we keep the variable with the highest correlation with y, but this
 # does not generate the best results all the time. So, trial and error is needed.
 print(np.abs(y_train.corr(X_train['longitude'])))

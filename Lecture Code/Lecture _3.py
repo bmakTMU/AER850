@@ -87,12 +87,13 @@ strat_data_train = scaled_data_train.df.join(strat_data_train.iloc[:,-5:])
 
 ## Variable Selection
 # Identify y and X. Remember the goal is to find f(.) such that y=f(X)
-y_train = strat_data_train['median_house_value']
-X_train = strat_data_train.drop(columns=['median_house_values'])
+y_train = strat_data_train['median_house_value'] # only uses column "median house data"
+X_train = strat_data_train.drop(columns=['median_house_values']) # everyhting but "median house data"
 y_test = strat_data_test['median_house_value']
 X_test = strat_data_test.drop(column=['median_house_value'])
 
 
+# sanity check - checks size of test and train data
 print(data.shape)
 print(strat_data_train.shape)
 print(strat_data_test.shape)

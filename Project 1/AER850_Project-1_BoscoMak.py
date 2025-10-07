@@ -13,7 +13,7 @@ data = data.dropna().reset_index(drop=True)
 import matplotlib.pyplot as plt
 
 # visualizes distribution of count of each value vs value
-data.hist() # original bins=10 makes data look weird, fixed w/ 13
+data.hist(bins=13) # original bins=10 makes data look weird, fixed w/ 13
 
 plt.figure(figsize=(10,8))
 plt.scatter(data['Step'], data['X'])

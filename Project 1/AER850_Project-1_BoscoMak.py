@@ -429,5 +429,6 @@ d = [9.4,3,1.8]
 e = [9.4,3,1.3]
 
 eval_data = np.array([a,b,c,d,e])
+eval_data = sc.transform(eval_data)
 pred = final_clf.predict(eval_data)
 print(pred)    

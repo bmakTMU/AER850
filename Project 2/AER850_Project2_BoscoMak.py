@@ -18,6 +18,7 @@ w = 500
 h = 500
 
 batch_size = 32
+epoch = 1
 
 # directories
 train_dir = 'Data/train'
@@ -32,6 +33,7 @@ train = keras.utils.image_dataset_from_directory(
     image_size = (w, h),
     seed = 21,
     )
+
 # test Data
 test = keras.utils.image_dataset_from_directory(
     directory = test_dir,
@@ -55,12 +57,13 @@ val = keras.utils.image_dataset_from_directory(
 rescale = layers.Rescaling(1./255)             # scale to range [0, 255]
 
 data_augmentation = keras.Sequential([
-    layers.RandomZoom(0.2),                    # zoom range
-    layers.RandomShear(0.2),                   # shear range 
+    layers.RandomZoom(0.2),             # zoom range
+    layers.RandomRotation(0.1),         # Rotation + Translation replaces shear
+    layers.RandomTranslation(0.1, 0.1)
 ])
 
 # Apply normalization and augmentation to the training dataset
-train = train.map(lambda x, y: (rescale(data_augmentation(x, training=True)), y)) # lambda - 
+train = train.map(lambda x, y: (rescale(data_augmentation(x, training=True)), y))
 
 # Apply only rescaling to validation and test datasets
 val = val.map(lambda x, y: (rescale(x), y))
@@ -69,21 +72,62 @@ test = test.map(lambda x, y: (rescale(x), y))
 
 """ 2. Neural Network Architecture Design """
 
-
-
 mdl1 = keras.Sequential([
-    layers.Conv2D(filters = 32, kernel_size = (3,3), activation="relu", input_shape=(w, h, 3)),
+    layers.Conv2D(filters = 32, 
+                  kernel_size = (3,3), 
+                  activation="relu", 
+                  input_shape=(w, h, 3)
+                  ),
     layers.MaxPooling2D((2,2)),
-    layers.Conv2D(64, (3,3), activation="relu"),
+    layers.Conv2D(filters = 64,
+                  kernel_size = (3,3),
+                  activation="relu"
+                  ),
     layers.MaxPooling2D((2,2)),                 
     layers.Flatten(),                           # Flatten input
-    layers.Dense(64, activation="relu"),        # Relu hidden layers, 64 neurons
+    layers.Dense(16, activation="relu"),        # Relu hidden layers, 64 neurons
     layers.Dropout(0.3),                        # 30% dropout to prevent overfitting
     layers.Dense(3, activation="softmax")       # output layer, 3 classes
 ])
 
 mdl1.summary()
 
+mdl1.compile(
+    optimizer=keras.optimizers.Adam(learning_rate=1e-3),
+    loss="categorical_crossentropy",
+    metrics=["accuracy"]
+)
+
+early_stop = keras.callbacks.EarlyStopping(
+    monitor="val_accuracy",
+    patience=3,
+    restore_best_weights=True
+    )
+
+history1 = mdl1.fit(
+    train,
+    validation_data=(val),
+    epochs=epoch,
+    batch_size=batch_size,
+    callbacks=[early_stop],
+    verbose=1
+)
+
+# Evaluate CNN model
+test_loss1, test_acc1 = mdl1.evaluate(test)
+print(f"Test accuracy: {test_acc1:.4f} | Test loss: {test_loss1:.4f}")
+
+# Plotting model
+
+plt.figure(figsize=(6,4))
+plt.plot(history1.history["accuracy"], label="Train Acc")
+plt.plot(history1.history["val_accuracy"], label="Val Acc")
+plt.xlabel("Epoch")
+plt.ylabel("Accuracy")
+plt.title("CNN Accuracy vs Epoch")
+plt.legend()
+plt.grid(True)
+plt.show()
 
 """ 3. Hyperparameter Analysis """
 

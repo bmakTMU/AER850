@@ -2,9 +2,10 @@
 
 
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 
-import tensorflow
+import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers, models
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
@@ -13,12 +14,13 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 """ 1. Data Processing """
 
-# set dimensions
+# set dimensions/constants
 w = 500
 h = 500
 
-batch_size = 32
-epoch = 1
+
+tf.keras.utils.set_random_seed(21)
+AUTOTUNE = tf.data.AUTOTUNE
 
 # directories
 train_dir = 'Data/train'
@@ -31,7 +33,6 @@ train = keras.utils.image_dataset_from_directory(
     labels = "inferred",
     label_mode = 'categorical',
     image_size = (w, h),
-    seed = 21,
     )
 
 # test Data
@@ -40,7 +41,6 @@ test = keras.utils.image_dataset_from_directory(
     labels = "inferred", 
     label_mode = 'categorical',
     image_size = (w, h),
-    seed = 21,
     )
 
 # validation data
@@ -49,12 +49,16 @@ val = keras.utils.image_dataset_from_directory(
     labels = "inferred",
     label_mode = 'categorical',
     image_size = (w, h),
-    seed = 21,
     )
+
+# Sanity check
+class_names = train.class_names
+num_classes = len(class_names)
+print("Classes:", class_names)
 
 # Data augmentation 
 
-rescale = layers.Rescaling(1./255)             # scale to range [0, 255]
+rescale = layers.Rescaling(1./255)      # scale to range [0, 255]
 
 data_augmentation = keras.Sequential([
     layers.RandomZoom(0.2),             # zoom range
@@ -72,20 +76,23 @@ test = test.map(lambda x, y: (rescale(x), y))
 
 """ 2. Neural Network Architecture Design """
 
+batch_size = 32
+epoch = 15
+
+
+early_stop = keras.callbacks.EarlyStopping(
+    monitor="val_accuracy",
+    patience=3,
+    restore_best_weights=True
+    )
+
 mdl1 = keras.Sequential([
-    layers.Conv2D(filters = 32, 
-                  kernel_size = (3,3), 
-                  activation="relu", 
-                  input_shape=(w, h, 3)
-                  ),
+    layers.Conv2D(filters = 32, kernel_size = (3,3),activation="relu", input_shape=(w, h, 3)),
     layers.MaxPooling2D((2,2)),
-    layers.Conv2D(filters = 64,
-                  kernel_size = (3,3),
-                  activation="relu"
-                  ),
+    layers.Conv2D(filters = 32, kernel_size = (3,3), activation="relu"),
     layers.MaxPooling2D((2,2)),                 
     layers.Flatten(),                           # Flatten input
-    layers.Dense(16, activation="relu"),        # Relu hidden layers, 64 neurons
+    layers.Dense(128, activation="relu"),        # Relu hidden layers, 64 neurons
     layers.Dropout(0.3),                        # 30% dropout to prevent overfitting
     layers.Dense(3, activation="softmax")       # output layer, 3 classes
 ])
@@ -98,11 +105,7 @@ mdl1.compile(
     metrics=["accuracy"]
 )
 
-early_stop = keras.callbacks.EarlyStopping(
-    monitor="val_accuracy",
-    patience=3,
-    restore_best_weights=True
-    )
+
 
 history1 = mdl1.fit(
     train,

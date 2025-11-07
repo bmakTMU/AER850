@@ -11,9 +11,6 @@ from tensorflow.keras import layers, models
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 
-
-""" 1. Data Processing """
-
 # set dimensions/constants
 w = 500
 h = 500
@@ -63,7 +60,10 @@ rescale = layers.Rescaling(1./255)      # scale to range [0, 255]
 data_augmentation = keras.Sequential([
     layers.RandomZoom(0.2),             # zoom range
     layers.RandomRotation(0.1),         # Rotation + Translation replaces shear
-    layers.RandomTranslation(0.1, 0.1)
+    layers.RandomTranslation(0.1, 0.1),
+    layers.RandomContrast(0.2),
+    layers.RandomFlip(mode='horizontal')
+    
 ])
 
 # Apply normalization and augmentation to the training dataset
@@ -74,53 +74,52 @@ val = val.map(lambda x, y: (rescale(x), y))
 test = test.map(lambda x, y: (rescale(x), y))
 
 
-""" 2. Neural Network Architecture Design """
-
 batch_size = 32
 epoch = 15
 
-
+# stopping criteria
 early_stop = keras.callbacks.EarlyStopping(
     monitor="val_accuracy",
     patience=3,
     restore_best_weights=True
     )
 
+# model design
 mdl1 = keras.Sequential([
     layers.Conv2D(filters = 32, kernel_size = (3,3),activation="relu", input_shape=(w, h, 3)),
     layers.MaxPooling2D((2,2)),
     layers.Conv2D(filters = 32, kernel_size = (3,3), activation="relu"),
-    layers.MaxPooling2D((2,2)),                 
+    layers.MaxPooling2D((2,2)),   
+    layers.Conv2D(filters = 16, kernel_size = (3,3), activation="relu"),
+    layers.MaxPooling2D((2,2)),
+    layers.Conv2D(filters = 32, kernel_size = (3,3), activation="relu"),
+    layers.MaxPooling2D((2,2)),                
     layers.Flatten(),                           # Flatten input
     layers.Dense(128, activation="relu"),        # Relu hidden layers, 64 neurons
-    layers.Dropout(0.3),                        # 30% dropout to prevent overfitting
+    layers.Dropout(0.4),                        # 30% dropout to prevent overfitting
     layers.Dense(3, activation="softmax")       # output layer, 3 classes
 ])
 
 mdl1.summary()
 
-mdl1.compile(
-    optimizer=keras.optimizers.Adam(learning_rate=1e-3),
+mdl1.compile(optimizer=keras.optimizers.Adam(learning_rate=1e-3),
     loss="categorical_crossentropy",
-    metrics=["accuracy"]
-)
+    metrics=["accuracy"])
 
+# Model training
 
-
-history1 = mdl1.fit(
-    train,
+history1 = mdl1.fit(train,
     validation_data=(val),
     epochs=epoch,
     batch_size=batch_size,
     callbacks=[early_stop],
-    verbose=1
-)
+    verbose=1)
 
 # Evaluate CNN model
 test_loss1, test_acc1 = mdl1.evaluate(test)
 print(f"Test accuracy: {test_acc1:.4f} | Test loss: {test_loss1:.4f}")
 
-# Plotting model
+# Plotting model training history
 
 plt.figure(figsize=(6,4))
 plt.plot(history1.history["accuracy"], label="Train Acc")
@@ -132,9 +131,15 @@ plt.legend()
 plt.grid(True)
 plt.show()
 
-""" 3. Hyperparameter Analysis """
+plt.figure(2)
+plt.plot(history1.history['loss'], label='training loss')
+plt.plot(history1.history['val_loss'], label = 'validation loss')
+plt.xlabel('Epoch')
+plt.ylabel('Loss')
+plt.ylim([0.0, 6])
+plt.legend()
+plt.title('Training and Validation Loss')
 
-""" 4. Model Evaluation """
 
-""" 5. Model Testing """
-
+#save model
+mdl1.save("model.keras")
